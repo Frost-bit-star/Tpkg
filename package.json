@@ -1,0 +1,35 @@
+{
+  "name": "tpkg-host",
+  "version": "1.0.0",
+  "description": "TPKG host website with Google OAuth, repo indexing, and dashboard",
+  "main": "index.js",
+  "author": "Morgan Miller <morganmilstone983@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint",
+    "db:build": "node schema.js"
+  },
+  "keywords": [
+    "tpkg",
+    "package-manager",
+    "nextjs",
+    "postgresql",
+    "oauth",
+    "github"
+  ],
+  "dependencies": {
+    "next": "^14.3.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "pg": "^8.11.1",
+    "node-fetch": "^3.4.2",
+    "next-auth": "^4.26.0"
+  },
+  "devDependencies": {
+    "eslint": "8.49.0",
+    "eslint-config-next": "14.3.1"
+  }
+}
