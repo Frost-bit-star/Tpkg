@@ -1,12 +1,44 @@
 // pages/index.js
 import Head from "next/head";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 export default function Home() {
+  const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [typedText, setTypedText] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const fullText = "Build and share Termux tools";
+
+  // Typewriter animation
+  useEffect(() => {
+    let index = 0;
+    const interval = setInterval(() => {
+      setTypedText(fullText.slice(0, index + 1));
+      index++;
+      if (index === fullText.length) clearInterval(interval);
+    }, 80);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Check login state
+  useEffect(() => {
+    const token = localStorage.getItem("tpkg_token");
+    if (token) {
+      setLoggedIn(true);
+      router.replace("/dashboard");
+    }
+  }, []);
+
+  const copyInstall = () => {
+    navigator.clipboard.writeText("apt install tpkg");
+    alert("Copied: apt install tpkg");
+  };
+
   return (
     <>
       <Head>
-        <title>TPKG - Termux Package Manager</title>
-        <meta charSet="UTF-8" />
+        <title>TPKG – Termux Package Manager</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://cdn.tailwindcss.com"></script>
         <link
@@ -15,154 +47,180 @@ export default function Home() {
         />
       </Head>
 
-      <body className="font-poppins bg-white">
-        {/* Header */}
-        <header className="border-b border-gray-200">
-          {/* Upper header */}
-          <div className="flex justify-between items-center px-6 py-4">
-            <div className="flex items-center space-x-2">
-              <img src="/images/black-heart.png" alt="Logo" className="w-5" />
-              <span className="font-bold text-xl">TPKG</span>
-            </div>
-            <nav className="w-[600px]">
-              <ul className="flex justify-between">
-                <li><a href="#about" className="hover:bg-gray-200 px-2 py-1 rounded font-bold">About</a></li>
-                <li><a href="#install" className="hover:bg-gray-200 px-2 py-1 rounded font-bold">Install</a></li>
-                <li><a href="#usage" className="hover:bg-gray-200 px-2 py-1 rounded font-bold">Usage</a></li>
-                <li><a href="#publish" className="hover:bg-gray-200 px-2 py-1 rounded font-bold">Publish</a></li>
-                <li><a href="#features" className="hover:bg-gray-200 px-2 py-1 rounded font-bold">Features</a></li>
-                <li><a href="#contact" className="hover:bg-gray-200 px-2 py-1 rounded font-bold">Contact</a></li>
-              </ul>
-            </nav>
-          </div>
-
-          {/* Lower header */}
-          <div className="flex justify-between items-center px-6 py-4">
-            <img src="/images/npm-logo.png" alt="TPKG Logo" className="w-16" />
-            <form className="flex flex-1 mx-6">
-              <label htmlFor="search" className="flex items-center bg-gray-100 p-2 cursor-pointer">
-                <img src="/images/magnifying-glass.png" alt="Search" className="w-5 h-5" />
-              </label>
-              <input
-                type="search"
-                id="search"
-                placeholder="Search tools"
-                className="flex-1 p-2 border-none focus:outline-none bg-gray-100 font-bold"
+      <div className="font-[Poppins] bg-white min-h-screen flex flex-col">
+        {/* HEADER */}
+        <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b h-[60px] flex items-center px-4">
+          <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
+            <div className="flex items-center gap-3">
+              <img
+                src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/github.svg"
+                className="w-6 h-6"
+                alt="logo"
               />
-              <button className="px-4 bg-red-600 text-white font-bold hover:bg-red-800">Search</button>
-            </form>
-            <div className="flex space-x-2">
-              <a href="#join" className="border border-black px-4 py-2 font-bold hover:bg-gray-200">Join</a>
-              <a href="#login" className="bg-black text-white px-4 py-2 font-bold hover:bg-gray-800">Log In</a>
+              <span className="font-bold text-lg">TPKG</span>
+            </div>
+
+            {/* Desktop nav */}
+            <nav className="hidden md:flex gap-6 text-sm font-semibold">
+              <a href="#about" className="hover:text-gray-600">About</a>
+              <a href="#install" className="hover:text-gray-600">Install</a>
+              <a href="#usage" className="hover:text-gray-600">Usage</a>
+              <a href="#features" className="hover:text-gray-600">Features</a>
+            </nav>
+
+            {/* Dropdown menu */}
+            <div className="relative">
+              <button
+                className="flex items-center border px-4 py-2 rounded-md text-sm"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                Menu
+              </button>
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg py-2 z-50">
+                  <a href="#about" className="block px-4 py-2 hover:bg-gray-100">About</a>
+                  <a href="#install" className="block px-4 py-2 hover:bg-gray-100">Install</a>
+                  <a href="#usage" className="block px-4 py-2 hover:bg-gray-100">Usage</a>
+                  <a href="#features" className="block px-4 py-2 hover:bg-gray-100">Features</a>
+                  <a href="https://github.com/Frost-bit-star/tpkg" className="block px-4 py-2 hover:bg-gray-100">GitHub</a>
+                  <a href="/dashboard" className="block px-4 py-2 hover:bg-gray-100">Explore</a>
+                  {!loggedIn && <a href="/login" className="block px-4 py-2 hover:bg-gray-100">Login</a>}
+                </div>
+              )}
             </div>
           </div>
         </header>
 
-        {/* Hero Section */}
-        <section id="hero" className="bg-red-100 min-h-[600px] flex flex-col items-center justify-center text-center px-6">
-          <h1 className="mt-24 text-[70px] font-extrabold">Build amazing Termux tools</h1>
-          <p className="mt-6 w-[500px] text-lg font-bold leading-relaxed">
-            TPKG is a Termux-focused package manager that allows you to distribute, install, and manage CLI tools efficiently.
-          </p>
-          <div className="mt-16 flex space-x-4">
-            <a href="#install">
-              <button className="bg-red-600 text-white font-bold px-10 py-3 shadow-[8px_8px_0_rgba(251,59,73,0.2)] hover:bg-red-700 hover:shadow-[9px_9px_0_rgba(251,59,73,0.3)]">Install Now</button>
+        {/* MAIN */}
+        <main className="pt-[80px] flex-1">
+          {/* HERO */}
+          <section className="px-6 py-20 text-center max-w-4xl mx-auto">
+            <h1 className="mt-16 text-4xl md:text-6xl font-extrabold leading-tight bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500">
+              {typedText}
+              <span className="border-r-4 border-gray-900 animate-pulse ml-1"></span>
+            </h1>
+            <p className="mt-6 text-gray-600 text-lg">
+              TPKG is a lightweight package index for Termux CLI tools.
+              Publish from GitHub. Install with one command.
+            </p>
+
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="/dashboard">
+                <button className="bg-black text-white px-8 py-3 rounded-md font-semibold hover:bg-gray-800 transition">
+                  Explore Packages
+                </button>
+              </a>
+              <button
+                onClick={copyInstall}
+                className="border px-8 py-3 rounded-md font-semibold hover:bg-gray-100 transition"
+              >
+                Copy Install Badge
+              </button>
+            </div>
+          </section>
+
+          {/* ABOUT */}
+          <section id="about" className="px-6 py-16 max-w-5xl mx-auto">
+            <h2 className="text-3xl font-bold mb-4">What is TPKG?</h2>
+            <p className="text-gray-700 leading-relaxed">
+              TPKG is a GitHub-powered package manager for Termux.
+              Developers publish tools using a simple <code>tpkg.json</code>,
+              and users install them instantly without manual setup.
+            </p>
+          </section>
+
+          {/* INSTALL */}
+          <section id="install" className="bg-gray-50 px-6 py-16">
+            <div className="max-w-5xl mx-auto flex flex-col items-center gap-4">
+              <h2 className="text-3xl font-bold mb-2">Installation</h2>
+              <div className="flex flex-col sm:flex-row gap-2 items-center w-full sm:w-auto">
+                <pre className="bg-white border rounded-md p-4 font-mono text-sm overflow-x-auto">
+apt install tpkg
+                </pre>
+                <button
+                  onClick={copyInstall}
+                  className="bg-black text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800 transition"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* USAGE */}
+          <section id="usage" className="px-6 py-16 max-w-5xl mx-auto">
+            <h2 className="text-3xl font-bold mb-4">Usage</h2>
+            <div className="bg-gray-50 border rounded-md p-4 overflow-x-auto">
+              <pre className="font-mono text-sm">
+{`# Initialize your repo
+tpkg init  # creates a tpkg.json file
+
+# Example tpkg.json
+cat tpkg.json
+{
+  "name": "stackedge",
+  "version": "0.1.0",
+  "description": "stackedge tool allows Termux users to host websites on dark web without server",
+  "author": "Frost-bit-star",
+  "repo": "git@github.com:Frost-bit-star/tpkg-web.git",
+  "install": "npm install -g stackedge",
+  "installType": "command"
+}
+
+# Search and install tools
+tpkg search toolname
+tpkg install toolname`}
+              </pre>
+            </div>
+          </section>
+
+          {/* HOW TO ADD TOOLS */}
+          <section id="add-tool" className="px-6 py-16 max-w-5xl mx-auto bg-white border rounded-md">
+            <h2 className="text-3xl font-bold mb-4">Add Your Tool</h2>
+            <p className="text-gray-700 leading-relaxed mb-4">
+              Developers can add their tools to TPKG by logging in, uploading the GitHub URL of the project, 
+              and ensuring it contains a <code>tpkg.json</code>. Once submitted, our system will fetch the repo, 
+              index it, and make it installable via <code>tpkg install toolname</code>. 
+              Currently, we manage only **public GitHub repositories**.
+            </p>
+            <a href="/login">
+              <button className="bg-black text-white px-6 py-2 rounded-md font-semibold hover:bg-gray-800 transition">
+                Login to Add Tool
+              </button>
             </a>
-            <a href="#usage">
-              <button className="bg-white text-black font-bold px-10 py-3 hover:bg-gray-300">Usage Guide</button>
-            </a>
-          </div>
-        </section>
+          </section>
 
-        {/* About Section */}
-        <section id="about" className="bg-white min-h-[400px] flex flex-col items-center justify-center text-center px-6 py-12">
-          <h2 className="text-4xl font-bold mb-4">What is TPKG?</h2>
-          <p className="w-[700px] text-lg font-bold leading-relaxed">
-            TPKG is a Termux Package Manager designed for CLI scripts and tools. It allows developers to easily publish, share, and install tools without complex manual setups.
-          </p>
-        </section>
-
-        {/* Installation Section */}
-        <section id="install" className="bg-gray-50 min-h-[400px] flex flex-col items-center justify-center text-center px-6 py-12">
-          <h2 className="text-4xl font-bold mb-4">Installation</h2>
-          <p className="w-[700px] text-lg font-bold leading-relaxed mb-6">Install TPKG in Termux with a single command:</p>
-          <pre className="bg-gray-200 p-4 rounded font-mono w-[400px] mb-6">apt install tpkg</pre>
-        </section>
-
-        {/* Usage Section */}
-        <section id="usage" className="bg-white min-h-[500px] flex flex-col items-center justify-center text-center px-6 py-12">
-          <h2 className="text-4xl font-bold mb-4">Usage</h2>
-          <p className="w-[700px] text-lg font-bold leading-relaxed mb-6">
-            Once installed, you can install, search, or publish tools with TPKG:
-          </p>
-          <div className="w-[700px] text-left font-mono space-y-3">
-            <pre>tpkg install toolname   # Install a tool</pre>
-            <pre>tpkg search toolname    # Search for a tool</pre>
-            <pre>tpkg init               # Generate tpkg.json for your repo</pre>
-            <pre>tpkg publish            # Publish your tool (coming soon)</pre>
-          </div>
-          <p className="w-[700px] text-lg font-bold leading-relaxed mt-6">
-            If your script has dependencies, include an <code>install.sh</code> at the root of your repo.
-          </p>
-        </section>
-
-        {/* Publishing Section */}
-        <section id="publish" className="bg-gray-50 min-h-[400px] flex flex-col items-center justify-center text-center px-6 py-12">
-          <h2 className="text-4xl font-bold mb-4">Publishing Your Tool</h2>
-          <p className="w-[700px] text-lg font-bold leading-relaxed mb-6">
-            To publish your tool: create a GitHub repo → run <code>tpkg init</code> → upload your repo URL → others can install it via <code>tpkg install toolname</code>.
-          </p>
-        </section>
-
-        {/* Features Section */}
-        <section id="features" className="bg-white min-h-[600px] flex flex-col items-center justify-center text-center px-6 py-12">
-          <h2 className="text-4xl font-bold mb-12">Features</h2>
-          <div className="flex flex-wrap justify-center gap-6 max-w-6xl">
-            <div className="flex-1 min-w-[250px] border p-6 text-left">
-              <img src="/images/zero-configuration.svg" className="w-12 mb-4" alt="Zero config" />
-              <h3 className="text-red-600 font-bold text-lg mb-2">Zero Configuration</h3>
-              <p>Create an org, add your team, and start collaborating. Nothing to configure or manage.</p>
+          {/* FEATURES */}
+          <section id="features" className="bg-gray-50 px-6 py-16">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                ["Zero config", "Publish directly from GitHub"],
+                ["Fast installs", "Minimal Termux overhead"],
+                ["Verified repos", "tpkg.json validation"],
+                ["Open index", "Public package discovery"],
+              ].map(([title, desc]) => (
+                <div key={title} className="border bg-white p-6 rounded-md">
+                  <h3 className="font-semibold mb-2">{title}</h3>
+                  <p className="text-sm text-gray-600">{desc}</p>
+                </div>
+              ))}
             </div>
-            <div className="flex-1 min-w-[250px] border p-6 text-left">
-              <img src="/images/team-management.svg" className="w-12 mb-4" alt="Team management" />
-              <h3 className="text-red-600 font-bold text-lg mb-2">Team Management</h3>
-              <p>Control access to modules using simple team management features.</p>
-            </div>
-            <div className="flex-1 min-w-[250px] border p-6 text-left">
-              <img src="/images/familiar-features.svg" className="w-12 mb-4" alt="Familiar features" />
-              <h3 className="text-red-600 font-bold text-lg mb-2">Familiar Features</h3>
-              <p>TPKG provides parity with public Termux repo features your developers already use.</p>
-            </div>
-            <div className="flex-1 min-w-[250px] border p-6 text-left">
-              <img src="/images/npm-audit.svg" className="w-12 mb-4" alt="Audit" />
-              <h3 className="text-red-600 font-bold text-lg mb-2">TPKG Audit</h3>
-              <p>Secure installations with automatic safety checks. Track forks, stars, and usage.</p>
-            </div>
-          </div>
-        </section>
+          </section>
+        </main>
 
-        {/* CTA Section */}
-        <section id="cta" className="bg-gray-50 py-12 text-center">
-          <a href="#join" className="">
-            <button className="bg-black text-white font-bold text-lg px-20 py-4 shadow-[8px_8px_0_rgba(128,83,35,0.2)] hover:bg-gray-800 hover:shadow-[8px_8px_0_rgba(128,83,35,0.3)]">
-              Get Started
-            </button>
+        {/* FOOTER */}
+        <footer className="border-t bg-white px-6 py-6 text-sm text-gray-600 mt-auto flex flex-col md:flex-row justify-between items-center">
+          <span>© {new Date().getFullYear()} TPKG. All rights reserved.</span>
+          <a
+            href="https://opencollective.com/tpkg-projects"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 md:mt-0 bg-black text-white px-4 py-2 rounded-md text-sm hover:bg-gray-800 transition"
+          >
+            Donate
           </a>
-        </section>
-
-        {/* Footer */}
-        <footer id="contact" className="bg-gray-100 text-center py-6">
-          <div className="mb-4 font-bold text-lg">TPKG - Termux Package Manager</div>
-          <div className="flex justify-center space-x-6 mb-4">
-            <a href="#about" className="hover:underline">About</a>
-            <a href="#install" className="hover:underline">Install</a>
-            <a href="#usage" className="hover:underline">Usage</a>
-            <a href="#publish" className="hover:underline">Publish</a>
-            <a href="https://github.com/Frost-bit-star/tpkg" className="hover:underline">GitHub</a>
-          </div>
-          <div className="text-sm text-gray-600">© 2026 termux 0ackages · Email: morganmilstone983@gmail.com</div>
         </footer>
-      </body>
+      </div>
     </>
   );
 }

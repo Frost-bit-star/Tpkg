@@ -1,21 +1,45 @@
 // pages/api/repos.js
-import { getSession } from "next-auth/react";
 import { db } from "../../lib/db.js";
 import fetch from "node-fetch";
+import jwt from "jsonwebtoken";
 
+const JWT_SECRET = process.env.JWT_SECRET || "tpkg_secret";
+
+// Helper to fetch GitHub repo + tpkg.json + README, try main then master
 async function fetchGitHubRepo(url) {
   const [user, repo] = url.replace("https://github.com/", "").split("/");
+  if (!user || !repo) throw new Error("Invalid GitHub URL");
+
+  // GitHub API metadata
   const apiBase = `https://api.github.com/repos/${user}/${repo}`;
   const repoRes = await fetch(apiBase);
   if (!repoRes.ok) throw new Error("GitHub repo not found");
   const repoData = await repoRes.json();
 
-  const rawBase = `https://raw.githubusercontent.com/${user}/${repo}/main`;
-  const tpkgRes = await fetch(`${rawBase}/tpkg.json`);
-  if (!tpkgRes.ok) throw new Error("tpkg.json not found");
-  const tpkgJson = await tpkgRes.json();
+  const branches = ["main", "master"];
+  let tpkgJson = null;
+  let branchFound = null;
 
-  const readmeRes = await fetch(`${rawBase}/README.md`);
+  for (const branch of branches) {
+    const rawBase = `https://raw.githubusercontent.com/${user}/${repo}/${branch}`;
+    try {
+      const tpkgRes = await fetch(`${rawBase}/tpkg.json`);
+      if (tpkgRes.ok) {
+        tpkgJson = await tpkgRes.json();
+        branchFound = branch;
+        break;
+      }
+    } catch (err) {
+      // ignore JSON parse errors for now
+    }
+  }
+
+  if (!tpkgJson) {
+    return { error: "tpkg.json not found on main or master branch. Add a tpkg.json in your repo root." };
+  }
+
+  // README.md
+  const readmeRes = await fetch(`https://raw.githubusercontent.com/${user}/${repo}/${branchFound}/README.md`);
   const readme = readmeRes.ok ? await readmeRes.text() : "";
 
   return {
@@ -35,51 +59,71 @@ async function fetchGitHubRepo(url) {
 }
 
 export default async function handler(req, res) {
-  const session = await getSession({ req });
-  if (!session) return res.status(401).json({ error: "Unauthorized" });
+  // --- AUTH ---
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
 
-  const userEmail = session.user.email;
+  let userEmail;
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    userEmail = payload.email;
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
 
+  // --- POST: Add a repo ---
   if (req.method === "POST") {
     const { url } = req.body;
     if (!url) return res.status(400).json({ error: "Repo URL required" });
 
     try {
-      // get owner_id
       const userResult = await db.query("SELECT id FROM users WHERE email=$1", [userEmail]);
+      if (!userResult.rows.length) return res.status(401).json({ error: "User not found" });
       const owner_id = userResult.rows[0].id;
 
-      const { tpkgJson, readme, githubMeta } = await fetchGitHubRepo(url);
+      const fetchResult = await fetchGitHubRepo(url);
+      if (fetchResult.error) return res.status(400).json({ error: fetchResult.error });
+
+      const { tpkgJson, readme, githubMeta } = fetchResult;
 
       const name = tpkgJson.name || url.split("/").pop();
       const description = tpkgJson.description || "";
 
       const insert = await db.query(
-        `INSERT INTO repos 
+        `INSERT INTO repos
          (name,url,description,owner_id,tpkg_json,readme,stars,forks,owner_login,owner_url,owner_avatar)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
          RETURNING *`,
         [
-          name, url, description, owner_id,
-          tpkgJson, readme,
-          githubMeta.stars, githubMeta.forks,
+          name,
+          url,
+          description,
+          owner_id,
+          tpkgJson,
+          readme,
+          githubMeta.stars,
+          githubMeta.forks,
           githubMeta.owner.login,
           githubMeta.owner.url,
-          githubMeta.owner.avatar
+          githubMeta.owner.avatar,
         ]
       );
 
       return res.json(insert.rows[0]);
     } catch (err) {
+      console.error(err);
       return res.status(500).json({ error: err.message });
     }
   }
 
+  // --- GET: List verified repos ---
   if (req.method === "GET") {
     try {
       const result = await db.query("SELECT * FROM repos WHERE verified=true ORDER BY created_at DESC");
       return res.json(result.rows);
     } catch (err) {
+      console.error(err);
       return res.status(500).json({ error: err.message });
     }
   }

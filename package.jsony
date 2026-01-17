@@ -21,18 +21,12 @@
     "github"
   ],
   "dependencies": {
-    "bcrypt": "^6.0.0",
-    "highlight.js": "^11.11.1",
-    "jsonwebtoken": "^9.0.3",
     "next": "latest",
-    "next-auth": "latest",
-    "node-fetch": "latest",
-    "pg": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "react-markdown": "^10.1.0",
-    "rehype-highlight": "^7.0.2",
-    "remark-gfm": "^4.0.1"
+    "pg": "latest",
+    "node-fetch": "latest",
+    "next-auth": "latest"
   },
   "devDependencies": {
     "eslint": "latest",
