@@ -127,5 +127,6 @@ Open a Pull Request
 ### 📜 License
 MIT License
 © 2026 TPKG Project
+---
 ### 🧠 Vision
 Make Termux package installation as simple as apt install.
