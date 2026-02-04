@@ -41,9 +41,9 @@ TPKG handles everything else.
 - 🏷 Script versioning
 - 🌐 Web-based discovery
 - 📊 Trending & popular tools
-- 📝 GitHub-style README rendering
-- 🔓 100% open source
-- 🐧 Built specifically for Termux
+- 📝 GitHub-style README rendering.
+- 🔓 100% open source.
+- 🐧 Built specifically for Termux.
 - 🆕 Script Versioning & Developer Visibility
 **TPKG now supports script versioning and web visibility.**
 For Developers
